@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CLV</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 1200px; margin: auto; text-align: left; }
+        img { max-width: 150px; vertical-align: left; }
+        h1 { color: #007bff; font-size: 1.8em; margin: 0; display: inline; text-align: center;}
+        h2 { color: #555; font-size: 1.2em; margin-top: 10px; }
+        form { margin-top: 20px; }
+        .filter-row { display: flex; justify-content: space-between; margin-top: 10px; }
+        .filter { flex: 1; margin-right: 10px; }
+        .filter:last-child { margin-right: 0; }
+        label { font-weight: bold; }
+        select { padding: 5px; margin-top: 5px; width: 20%; }
+        input[type="file"], input[type="button"] {
+            padding: 10px;
+            margin-top: 10px;
+            width: 40%;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input[type="file"]:hover, input[type="button"]:hover {
+            background-color: #0056b3;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .metrics { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .metric { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; }
+        .metric h3 { color: #333; }
+        .filters { margin-bottom: 20px; }
+        .filters label { font-weight: bold; }
+        .filters input { border: none; border-bottom: 1px solid #007bff; background: transparent; font-size: 16px; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px;}
+        th { background-color: #007bff; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
+        .back-button, .download-button { 
+            margin-top: 20px; 
+            padding: 10px 20px; 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+        .back-button:hover, .download-button:hover { 
+            background-color: #0056b3; 
+        }
+
+        
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="static/logo.png" alt="Company Logo"> <!-- Update the path as needed -->
+            <h1>&nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; 
+                &nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp;Customer churn prediction through CLV</h1>
+        </div>
+        <hr>
+        
+        <input type="file" id="fileInput" name="file" accept=".xlsx,.xls" required>
+        
+        <button id="uploadButton" > Upload</button>
+        
+        <h2>Filters</h2>
+        <label for="filter1">Filter by:</label>
+        <select id="filter1" required disabled>
+            <option value="">Select Filter 1</option>
+        </select>
+
+        <label for="filter2">Filter by:</label>
+        <select id="filter2" required disabled>
+            <option value="">Select Filter 2</option>
+        </select>
+
+        <label for="filter2">Predict:</label>
+        <select id="cutOffSelect" required>
+            <option value="">Select Cut Off</option>
+            <option value="3" selected>3 Months</option>
+            <option value="6">6 Months</option>
+            <option value="9">9 Months</option>
+            <option value="12">12 Months</option>
+        </select>
+        <br>
+        <label for="filter2">Churn Rule</label>
+        <select id="churnRule" required>
+            <option value="">Select a Churn Rule/option>
+            <option value="Recency" selected>Recency Based</option>
+            <option value="Segment">RFM Based Segmentation</option>
+            <option value="FM">Frequency and Monetary Value/option>
+        </select>
+        <label for="filter2">Churn Threshold</label>
+        <input type="number" id="threshold" value="180"/>
+        <button id="processButton" disabled>Process Data</button>
+        <hr>
+        <h2>Predicted CLV</h2>
+        <div id="metricsContainer"></div>
+        <div id="metricsContainerPareto"></div>
+        <div id="outputTableContainer"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script>
+        document.getElementById('uploadButton').addEventListener('click', function() {
+            const fileInput = document.getElementById('fileInput');
+             // Check if the upload button click event is triggered
+            if (!fileInput.files.length) {
+                alert("Please select a file.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+
+                // Get column headers
+                const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0];
+
+                // Populate dropdowns for filters
+                const filter1Select = document.getElementById('filter1');
+                const filter2Select = document.getElementById('filter2');
+
+                // Clear previous options
+                filter1Select.innerHTML = '<option value="">Select Filter</option>';
+                filter2Select.innerHTML = '<option value="">Select Filter</option>';
+
+                headers.forEach(header => {
+                    const option1 = document.createElement('option');
+                    option1.value = header;
+                    option1.textContent = header;
+                    filter1Select.appendChild(option1);
+
+                    const option2 = document.createElement('option');
+                    option2.value = header;
+                    option2.textContent = header;
+                    filter2Select.appendChild(option2);
+                });
+
+                // Enable dropdowns and the process button
+                filter1Select.disabled = false;
+                filter2Select.disabled = false;
+                document.getElementById('processButton').disabled = false;
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+
+        document.getElementById('processButton').addEventListener('click', function() {
+            const fileInput = document.getElementById('fileInput');
+            const cutOff = document.getElementById('cutOffSelect').value;
+            const filter1 = document.getElementById('filter1').value;
+            const filter2 = document.getElementById('filter2').value;
+            const churnRule = document.getElementById('churnRule').value; 
+            const threshold = document.getElementById('threshold').value; 
+           
+            //alert("Process button clicked");
+    // Validate selections
+            if (!fileInput.files.length) {
+                alert("Please select a file.");
+                return;
+            }
+            if (!cutOff) {
+                alert("Please select a cut-off period.");
+                return;
+            }
+            /*
+            if (!filter1 || !filter2) {
+                alert("Please select both filters.");
+                return;
+            } */
+            if (!churnRule) {
+                alert("Please select a Churn Rule");
+                return;
+            }
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('cutOff', cutOff);
+    formData.append('filter1', filter1);
+    formData.append('filter2', filter2);
+    formData.append('churnRule', churnRule);
+    formData.append('threshold', threshold);
+    //alert("Process button clicked 1");
+
+    fetch('/process', {
+    method: 'POST',
+    body: formData
+})
+.then(response => {
+    if (!response.ok) {
+        return response.json().then(error => {
+            throw new Error(error.error);
+        });
+    }
+    return response.json().then(data => {
+        console.log("Response Data:", data);  // Log the actual response data
+        return data;  // Return the data for the next then() block
+    });
+})
+.then(data => {
+    // Display metrics <label for="filter1">Filter 1:</label>
+    const metricsContainer = document.getElementById('metricsContainer');
+    metricsContainer.innerHTML = ''
+    const metHtml = `
+
+        <table>
+            <caption>Beta Gamma NBD Metrics</caption>
+            <thead>
+                <tr>
+                    <th>Correlation</th>
+                    <th>Total Predicted Value</th>
+                    <th>Actual Order Total</th>
+                    <th>Total Predicted No of Orders</th>
+                    <th>Actual No Of Orders</th>
+                    <th>Order Value%</th>
+                    <th>Order Volume%</th>
+                    <th>Churn Ratio%</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td align="right">${data.metrics.Correlation}</td>
+                    <td align="right">${Number(data.metrics.PredictedCLV).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0})}</td>
+                    <td align="right">${Number(data.metrics.ActualOrderTotal).toLocaleString('en-US', { style: 'currency', currency: 'USD',minimumFractionDigits: 0})}</td>
+                    <td align="right">${data.metrics.PredictedNoOfOrders}</td>
+                    <td align="right">${data.metrics.ActualNoOfOrders}</td>
+                    <td align="right">${data.metrics.OrderValueRatio}%</td>
+                    <td align="right">${data.metrics.OrderVolumeRatio}%</td>
+                    <td align="right">${data.metrics.ChurnRatio}</td>
+                <tr>
+            </tbody>
+        </table>
+
+        <table>
+           
+            <thead>
+                 <caption>Pareto NBD Metrics</caption>
+                <tr>
+                    <th>Correlation</th>
+                    <th>Total Predicted Value</th>
+                    <th>Actual Order Total</th>
+                    <th>Total Predicted No of Orders</th>
+                    <th>Actual No Of Orders</th>
+                    <th>Order Value%</th>
+                    <th>Order Volume%</th>
+                    <th>Churn Ratio%</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr>
+                    <td align="right">${data.metrics.ParetoCorrelation}</td>
+                    <td align="right">${Number(data.metrics.ParetoPredictedCLV).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0})}</td>
+                    <td align="right">${Number(data.metrics.ActualOrderTotal).toLocaleString('en-US', { style: 'currency', currency: 'USD',minimumFractionDigits: 0})}</td>
+                    <td align="right">${data.metrics.ParetoPredictedNoOfOrders}</td>
+                    <td align="right">${data.metrics.ActualNoOfOrders}</td>
+                    <td align="right">${data.metrics.ParetoOrderValueRatio}%</td>
+                    <td align="right">${data.metrics.ParetoOrderVolumeRatio}%</td>
+                    <td align="right">${data.metrics.ParetoChurnRatio}</td>
+                <tr>
+            </tbody>
+        </table>
+
+    `;
+    metricsContainer.innerHTML = metHtml;
+
+    const outputContainer = document.getElementById('outputTableContainer');
+    outputContainer.innerHTML = ''; // Clear previous output
+
+    const table = document.createElement('table');
+    const headerRow = document.createElement('tr');
+
+    // Extract headers from the first row of data
+    const headers = Object.keys(data.results[0]);
+    headers.forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header; // Set header text
+        headerRow.appendChild(th);
+    });
+    table.appendChild(headerRow);
+
+    // Populate table rows
+    data.results.forEach((row, index) => {
+        const dataRow = document.createElement('tr');
+        headers.forEach(header => {
+            const td = document.createElement('td');
+            
+            // Check if the column is numeric or requires special formatting
+            if (typeof row[header] === 'number') {
+                td.style.textAlign = 'right'; // Align numeric columns to the right
+            }
+
+            // Format specific columns
+            if (header === 'Monetary Value' || header === 'Predicted CLV'|| header==='Pareto Predicted Clv' || header === 'Actual Order Total') {
+                td.textContent = row[header].toLocaleString('en-US', {
+                    style: 'currency',
+                    currency: 'USD', // Change the currency as needed
+                    minimumFractionDigits: 0,
+                });
+            } else {
+                td.textContent = row[header]; // Set cell text for other columns
+            }
+            dataRow.appendChild(td);
+        });
+        table.appendChild(dataRow);
+    });
+
+    outputContainer.appendChild(table);
+    })
+    .catch(error => {
+        console.error("Fetch error:", error);  // Log any fetch errors
+        alert(error.message);
+    });
+        
+    })
+   
+
+    </script>
+</body>
+</html>

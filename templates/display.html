@@ -6,73 +6,78 @@
     <style>
         body { font-family: Arial, sans-serif; }
         .container { max-width: 800px; margin: auto; text-align: center; }
-        img { max-width: 150px; }
-        h1 { color: #333; }
-        h2 {
-            color: #555;
-            display: inline-block; /* Allows the button to be adjacent */
+        .header { display: flex; align-items: center; margin-bottom: 20px; }
+        img { max-width: 150px; margin-right: 20px; }
+        h1 { color: #007bff; margin: 0; }
+        .metrics { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .metric { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; }
+        .metric h3 { color: #333; }
+        .filters { margin-bottom: 20px; }
+        .filters label { font-weight: bold; }
+        .filters input { border: none; border-bottom: 1px solid #007bff; background: transparent; font-size: 16px; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
+        .back-button, .download-button { 
+            margin-top: 20px; 
+            padding: 10px 20px; 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
         }
-        .header {
-            display: flex;
-            justify-content: space-between; /* Space between heading and button */
-            align-items: center; /* Center align items vertically */
-            margin-bottom: 20px; /* Space below the header */
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            table-layout: auto; /* Allows the table to adjust based on content */
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #007bff; /* Excel-like blue for header */
-            color: white; /* White text for contrast */
-        }
-        tr:nth-child(even) {
-            background-color: #e7f1ff; /* Light professional blue shade */
-        }
-        tr:nth-child(odd) {
-            background-color: white; /* White for odd rows */
-        }
-        tr:hover {
-            background-color: #cce5ff; /* Slightly darker blue on hover */
-        }
-        a {
-            padding: 10px 15px;
-            background-color: #4CAF50;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-left: auto; /* Space to push the button to the right */
-        }
-        a:hover {
-            background-color: #45a049;
+        .back-button:hover, .download-button:hover { 
+            background-color: #0056b3; 
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <img src="static/logo.png" alt="Company Logo"> <!-- Add your logo here -->
-        <h1>Plural Insight</h1>
-        
-        <!-- Header for title and button -->
         <div class="header">
-            <h2>Customer Lifetime Value</h2>
-            <a href="{{ url_for('download_file', filename=output_file) }}">Download Excel</a>
+            <img src="static/logo.png" alt="Company Logo">
+            <h1>Lifetime Value</h1>
         </div>
         
+        <h2>Processed Data</h2>
+
+        <div class="metrics">
+            <div class="metric">
+                <h3>Metric 1</h3>
+                <p>Value: <input type="text" value="{{ metric1 }}" readonly></p>
+            </div>
+            <div class="metric">
+                <h3>Metric 2</h3>
+                <p>Value: <input type="text" value="{{ metric2 }}" readonly></p>
+            </div>
+            <div class="metric">
+                <h3>Metric 3</h3>
+                <p>Value: <input type="text" value="{{ metric3 }}" readonly></p>
+            </div>
+        </div>
+
+        <div class="filters">
+            <label for="filter1">Filter 1:</label>
+            <input type="text" id="filter1" value="{{ filter1 }}" readonly>
+            <label for="filter2">Filter 2:</label>
+            <input type="text" id="filter2" value="{{ filter2 }}" readonly>
+            <label for="filter3">Cut Off:</label>
+            <input type="text" id="filter3" value="{{ filter3 }}" readonly>
+        </div>
+
         <div class="data">
+            <h2>Results Table</h2>
             {% for table in tables %}
                 <div class="table-responsive">
                     {{ table|safe }}
                 </div>
             {% endfor %}
         </div>
+
+        <a href="/download/{{ output_file }}" class="download-button">Download Processed Data</a>
+        <button class="back-button" onclick="window.location.href='/'">Back to Upload</button>
     </div>
 </body>
 </html>

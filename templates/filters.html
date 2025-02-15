@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Select Filters</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: auto; }
+        h1 { color: #333; }
+        .filter { margin-top: 10px; }
+    </style>
+    <script>
+        function updateFilterOptions() {
+            const filter1 = document.getElementById('filter1').value;
+            const filter2 = document.getElementById('filter2');
+
+            // Enable all options initially
+            for (let option of filter2.options) {
+                option.disabled = false;
+            }
+
+            // Disable the selected option in filter1
+            if (filter1) {
+                for (let option of filter2.options) {
+                    if (option.value === filter1) {
+                        option.disabled = true;
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Select Filters</h1>
+        <form action="/process" method="post">
+            <div class="filter">
+                <label for="filter1">Filter 1:</label>
+                <select name="filter1" id="filter1" onchange="updateFilterOptions()">
+                    <option value="">Select a column</option>
+                    {% for column in columns %}
+                        <option value="{{ column }}">{{ column }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter">
+                <label for="filter2">Filter 2:</label>
+                <select name="filter2" id="filter2" onchange="updateFilterOptions()">
+                    <option value="">Select a column</option>
+                    {% for column in columns %}
+                        <option value="{{ column }}">{{ column }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter">
+                <label for="filter3">Cut Off:</label>
+                <select name="filter3" id="filter3" required>
+                    <option value="3">3 Months</option>
+                    <option value="6">6 Months</option>
+                    <option value="9">9 Months</option>
+                    <option value="12">12 Months</option>
+                </select>
+            </div>
+            <input type="submit" value="Process Data">
+        </form>
+    </div>
+</body>
+</html>

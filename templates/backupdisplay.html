@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Processed Data</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 800px; margin: auto; text-align: center; }
+        img { max-width: 150px; }
+        h1 { color: #333; }
+        h2 {
+            color: #555;
+            display: inline-block; /* Allows the button to be adjacent */
+        }
+        .header {
+            display: flex;
+            justify-content: space-between; /* Space between heading and button */
+            align-items: center; /* Center align items vertically */
+            margin-bottom: 20px; /* Space below the header */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            table-layout: auto; /* Allows the table to adjust based on content */
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff; /* Excel-like blue for header */
+            color: white; /* White text for contrast */
+        }
+        tr:nth-child(even) {
+            background-color: #e7f1ff; /* Light professional blue shade */
+        }
+        tr:nth-child(odd) {
+            background-color: white; /* White for odd rows */
+        }
+        tr:hover {
+            background-color: #cce5ff; /* Slightly darker blue on hover */
+        }
+        a {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-left: auto; /* Space to push the button to the right */
+        }
+        a:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="static/logo.png" alt="Company Logo"> <!-- Add your logo here -->
+        <h1>Plural Insight</h1>
+        
+        <!-- Header for title and button -->
+        <div class="header">
+            <h2>Customer Lifetime Value</h2>
+            <a href="{{ url_for('download_file', filename=output_file) }}">Download Excel</a>
+        </div>
+        
+        <div class="data">
+            {% for table in tables %}
+                <div class="table-responsive">
+                    {{ table|safe }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
